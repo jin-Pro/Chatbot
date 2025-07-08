@@ -1,2 +1,19 @@
+# FastAPI & ASGI server
 fastapi
 uvicorn[standard]
+
+# PDF 처리
+pymupdf
+
+# 이미지 처리 & OCR
+pillow
+pytesseract
+
+# OpenAI
+openai>=1.0.0
+
+# 벡터 DB (Chroma)
+chromadb
+
+# 타입 호환
+typing-extensions
