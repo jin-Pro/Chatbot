@@ -1,23 +1,14 @@
-from fastapi import APIRouter, UploadFile, File,Form
+from fastapi import APIRouter, UploadFile, File
 from pydantic import BaseModel
 import os 
-from service import pdf_parser, embedder, vector_store, prompt_builder, llm_client
-
-
+from service import pdf_parser, embedder, vector_store, prompt_builder, llm_client,text_splitter,fileController
 
 router = APIRouter()
 
-class QuestionRequest(BaseModel):
-    question: str
-
-
-@router.get("/")
-async def helloWorld():
-    return 'hello-world'
 
 @router.get("/list-pdfs")
 async def list_pdfs():
-    directory = "/tmp"
+    directory = fileController.getDirPath()
     pdf_files = []
 
     for filename in os.listdir(directory):
@@ -32,17 +23,11 @@ async def list_pdfs():
     return {"files": pdf_files}
 
 
-
 @router.post("/upload")
-async def upload_pdf(
-    file: UploadFile = File(...),
-    filename: str = Form(...)
-):
+async def upload_pdf(file: UploadFile = File(...)):
     contents = await file.read()
-    path = f"/tmp/{filename}"
-    with open(path, "wb") as f:
-        f.write(contents)
-
+    path = fileController.save(file.filename,contents)
+    
     # 1. 텍스트 추출 (PDF 내 텍스트)
     pdf_text = pdf_parser.extract_text_from_pdf(path)
 
@@ -58,16 +43,41 @@ async def upload_pdf(
 
     # 5. 임베딩 + 벡터 DB 저장
     embeddings = [embedder.get_embedding(chunk) for chunk in chunks]
-    collection = vector_store.get_vector_db()
-    vector_store.save_to_vector_db(chunks, embeddings, collection)
+    
+    vector_store.save_to_vector_db(chunks, embeddings,file.filename)
 
-    return {"status": "uploaded"}
+    return 'success'
+
+
+class DeleteRequest(BaseModel):
+    filename: str
+
+@router.delete("/delete-pdf/{filename}")
+async def delete_pdf(filename:str):
+    # 1. 파일 삭제
+    dirPath = fileController.getDirPath()
+    pdf_path = os.path.join(dirPath, filename)
+
+    if not os.path.exists(pdf_path):
+        raise HTTPException(status_code=404, detail="PDF 파일이 존재하지 않습니다.")
+    
+    try:
+        os.remove(pdf_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"파일 삭제 실패: {str(e)}")
+
+    # 2. 벡터 DB에서 관련 벡터 제거
+    vector_store.delete(f"doc_{filename}_")
+
+    return 'success'
+
+class QuestionRequest(BaseModel):
+    question: str
 
 @router.post("/ask")
 async def ask_question(payload: QuestionRequest):
     embedding = embedder.get_embedding(payload.question)
-    collection = vector_store.get_vector_db()
-    context_chunks = vector_store.query_similar_chunks(embedding, collection)
+    context_chunks = vector_store.query_similar_chunks(embedding)
     prompt = prompt_builder.build_prompt(context_chunks, payload.question)
     answer = llm_client.query_llm(prompt)
     return {"answer": answer}
