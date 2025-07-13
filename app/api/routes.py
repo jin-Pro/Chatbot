@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File,Form
 from pydantic import BaseModel
 from services import pdf_parser, embedder, vector_store, prompt_builder, llm_client
 
@@ -10,11 +10,32 @@ class QuestionRequest(BaseModel):
     question: str
 
 
+@router.get("/list-pdfs")
+async def list_pdfs():
+    directory = "/tmp"
+    pdf_files = []
+
+    for filename in os.listdir(directory):
+        if filename.lower().endswith(".pdf"):
+            file_path = os.path.join(directory, filename)
+            size = os.path.getsize(file_path)  # 파일 크기 (바이트)
+            pdf_files.append({
+                "filename": filename,
+                "size_bytes": size
+            })
+
+    return {"files": pdf_files}
+
+
 
 @router.post("/upload")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(
+    file: UploadFile = File(...),
+    filename: str = Form(...)
+):
     contents = await file.read()
-    with open("/tmp/uploaded.pdf", "wb") as f:
+    path = f"/tmp/{filename}"
+    with open(path, "wb") as f:
         f.write(contents)
 
     # 1. 텍스트 추출 (PDF 내 텍스트)
