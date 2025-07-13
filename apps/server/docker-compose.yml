@@ -7,4 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+      - ./tmp:/app/tmp
+      - ./vectorstore:/app/vectorstore # <== 로컬 ./vectorstore → 컨테이너 /app/vectorstore 매핑
+
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
