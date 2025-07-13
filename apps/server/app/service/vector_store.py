@@ -1,8 +1,22 @@
 import chromadb
 from chromadb.config import Settings
 
-_client = chromadb.Client(Settings(chroma_db_impl="duckdb+parquet", persist_directory="./db"))
+# persist_directory만 지정 (chroma_db_impl 옵션 제거)
+settings = Settings(persist_directory="./vectorstore")
+
+_client = chromadb.Client(settings=settings)
 _collection = _client.get_or_create_collection(name="docs")
+
+
+
+# from chromadb.config import Settings
+# import chromadb
+
+# settings = Settings(
+#     persist_directory="./vectorstore"
+# )
+
+# client = chromadb.Client(settings=settings)
 
 def get_vector_db():
     return _collection

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File,Form
 from pydantic import BaseModel
-from services import pdf_parser, embedder, vector_store, prompt_builder, llm_client
+import os 
+from service import pdf_parser, embedder, vector_store, prompt_builder, llm_client
 
 
 
@@ -9,6 +10,10 @@ router = APIRouter()
 class QuestionRequest(BaseModel):
     question: str
 
+
+@router.get("/")
+async def helloWorld():
+    return 'hello-world'
 
 @router.get("/list-pdfs")
 async def list_pdfs():
@@ -39,10 +44,10 @@ async def upload_pdf(
         f.write(contents)
 
     # 1. 텍스트 추출 (PDF 내 텍스트)
-    pdf_text = pdf_parser.extract_text_from_pdf("/tmp/uploaded.pdf")
+    pdf_text = pdf_parser.extract_text_from_pdf(path)
 
     # 2. 이미지 OCR 텍스트 추출 (한글 설정)
-    image_paths = pdf_parser.extract_images_from_pdf("/tmp/uploaded.pdf")
+    image_paths = pdf_parser.extract_images_from_pdf(path)
     ocr_text = pdf_parser.extract_text_from_images(image_paths, lang="kor")
 
     # 3. 전체 텍스트 병합

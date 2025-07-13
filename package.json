@@ -1,0 +1,10 @@
+{
+  "name": "RAG_CHAT_BOT",
+  "private": true,
+  "devDependencies": {},
+  "scripts": {
+    "admin": "pnpm --filter admin",
+    "fe": "pnpm --filter fe",
+    "be": "pnpm --filter be"
+  }
+}

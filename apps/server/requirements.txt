@@ -17,3 +17,5 @@ chromadb
 
 # 타입 호환
 typing-extensions
+
+python-multipart
