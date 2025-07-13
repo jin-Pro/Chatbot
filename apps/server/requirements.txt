@@ -4,6 +4,7 @@ uvicorn[standard]
 
 # PDF 처리
 pymupdf
+python-multipart
 
 # 이미지 처리 & OCR
 pillow
@@ -18,4 +19,6 @@ chromadb
 # 타입 호환
 typing-extensions
 
-python-multipart
+
+# embeding 처리
+sentence_transformers
